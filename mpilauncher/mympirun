@@ -1,0 +1,234 @@
+#!/bin/bash
+#
+#  Written by Adrian Jackson
+#  EPCC, The University of Edinburgh
+#  September 2016
+#
+# Name
+#   mympirun
+#
+# Overview
+#    To be used from within a PBS run to create an input file for mpirun
+#    which will launch an MPI job on a, or a series, of nodes.
+#    Specifically, this script was created to allow underpopulating
+#    nodes, and having an uneven number of processes on a node 
+#    (i.e. if you request 2 nodes, 5 MPI processes to be launched
+#    and 3 per node, this will allocate 3 MPI processes to the first node
+#    and 2 to the second).
+#
+#    You can run this either specifying just the application to run, in which
+#    case it will use as many MPI processes as you have virtual cores that 
+#    PBS has assigned to you.  You can also specify the number of MPI processes
+#    you want to run (-n or -np), and how many you want on each node (-ppn).  
+#
+#    If you specify more MPI processes than you have PBS virtual processes then
+#    this will abort with an error.  If you specify more processes per node than is
+#    possible with the number of nodes you have then it will ignmore the ppn 
+#    parameter you passed and try to balance the processes per node.  If you 
+#    request more nodes than you require (i.e. you have 2 nodes that can support
+#    36 processes each, but you only run 16 MPI processes) then this will balance 
+#    your processes across nodes (i.e. in the previous example you'd have 8 MPI 
+#    processes per node).
+#
+#
+
+
+myhelp()
+{
+cat <<"!"
+Description: 
+  This is mympirun which will launch an MPI job for you on Cirrus
+  Specifically, this script was created to allow underpopulating
+  nodes, and having an uneven number of processes on a node
+  (i.e. if you request 2 nodes, 5 MPI processes to be launched
+  and 3 per node, this will allocate 3 MPI processes to the first node
+  and 2 to the second).
+
+   You can run this either specifying just the application to run, in which
+  case it will use as many MPI processes as you have virtual cores that
+  PBS has assigned to you.  You can also specify the number of MPI processes
+  you want to run (-n or -np), and how many you want on each node (-ppn).
+
+  If you specify more MPI processes than you have PBS virtual processes then
+  this will abort with an error.  If you specify more processes per node than is
+  possible with the number of nodes you have then it will ignmore the ppn
+  parameter you passed and try to balance the processes per node.  If you
+  request more nodes than you require (i.e. you have 2 nodes that can support
+  36 processes each, but you only run 16 MPI processes) then this will balance
+  your processes across nodes (i.e. in the previous example you'd have 8 MPI
+  processes per node).
+
+
+Usage:
+  mympirun [ -n nproc ] application
+
+  mympirun local_options application
+
+  Where local_options can include the following command line arguments:
+
+   -ppn nprocs Specifies the number of processes per host
+   -n nprocs    Specifies the number of MPI processes to start.
+   -np nprocs   Same as -n.
+
+Other options:
+    -h or -help  Prints this message.
+!
+
+}
+
+
+user_cmd_opt=no
+NPROCS=0
+PPN=0
+#
+# Get command arguments that have been passed
+#
+while [ $# -ne 0 ] ; do
+
+    # process input options
+    case "$1" in
+        -h|--help|-help)
+            myhelp
+            exit 
+            ;;
+
+        -n|-np|--n|--np)
+        # Make sure we treat the value as base-10
+            NPROCS=$(( 10#$2 ))
+            shift 2
+            ;;
+
+        # 
+        -ppn|--ppn)
+            PPN=$(( 10#$2 ))
+            shift 2
+            ;;
+
+        #
+        # catch common errors
+        #
+        -*)
+            errorexit "$1 option not supported."
+            ;;
+
+        #
+        # non-options
+        #
+        *)
+            if [ $user_cmd_opt = no ] ; then
+                user_cmd_opt=yes
+                application=\"$1\"
+            fi
+            shift 1
+            ;;
+    esac
+done
+
+# Create a temporary file which will store the data that will be passed to MPI run
+paramfile=/tmp/mympirun.params.$USER.$$
+
+# Work out how many virtual processes we have been assigned by PBS
+numlines=`cat $PBS_NODEFILE | wc -l `
+# Work out how many nodes we have been assigned by PBS
+numhosts=`cat $PBS_NODEFILE | uniq | wc -l `
+
+# If the user hasn't specified the number of MPI processes to use default to the number of virtual processes we have
+if [ $NPROCS = 0 ]; then
+   NPROCS=$numlines   
+   echo
+   echo "==========="
+   echo "Warning, you have not specified the number of MPI processes you require (-n or -np)"
+   echo "We will default to the number you specified in your -l select command in PBS.  On Cirrus this means"
+   echo "you may be using the hyperthreading (72 processes per nodes)."
+   echo "==========="
+   echo
+fi
+
+# If the user hasn't specified the number of MPI processes per node to run then calculate this to divide the MPI
+# processes as evenly as possible across nodes
+if [ $PPN = 0 ]; then
+  temp_remainder=$(($NPROCS%$numhosts))
+  if [ $temp_remainder = 0 ]; then
+     PPN=$(($NPROCS/$numhosts))
+  else
+     PPN=$((($NPROCS/$numhosts)+1))
+  fi 
+fi
+
+# Work out if the number of processes per node evenly divides the number of MPI processes.
+remainder=$(($NPROCS%$PPN))
+numnode=0
+# Calculate the number of processes to place per node.  We calculate this to ensure that we can fit on the number of nodes available
+if [ $remainder != 0 ] ; then
+# If it doesn't evenly divide then round up the number of processes to put per node to ensure we can fit on the available nodes
+   numnode=$((($NPROCS/$PPN)+1))
+else
+   numnode=$(($NPROCS/$PPN))
+fi
+if [ $numnode -gt $numhosts ] ; then
+   echo
+   echo "==========="
+   echo "Problem, not enough nodes to satisfy request process count and processes per node.  We will attempt to run on the nodes you have been allocated but the mpi job launch may fail."
+   echo "You should adjust either the number of nodes you have requested, your -ppn setting or your requested process count."
+   echo "==========="
+   echo
+fi
+
+
+currentnumprocs=$NPROCS
+
+# Open the parameter file and start it with "-v"
+echo "-v" > $paramfile
+
+finallist=()
+count=1
+# Iterate through the list of nodes we have been assigned (which is obtained by the command (cat $PBS_NODEFILE | uniq)
+# We are constructing a list of nodes the MPI program will use.  This list is of the following form:
+# Nodename NumberofMPIProcessOnTheNode
+# i.e. node1.x.y.com 5,
+#      node2.x.y.com 4 
+while read line; do
+  j=1
+  numpernode=0
+# Calculate the number of processes we want to assign to a node.  Calculate whether we have now
+# got to the total process count.  If we have then don't add any more to this node.
+#  while [  $j -le $PPN ]; do
+#    if [ $currentnumprocs -gt 0 ]; then
+#       currentnumprocs=$(($currentnumprocs-1))
+#       numpernode=$j
+#    fi
+#    let j=j+1
+#  done
+  numpernode=$PPN
+  if [ $(($currentnumprocs-$PPN)) -lt 0 ]; then
+     numpernode=$(($numpernode+($currentnumprocs-$PPN)))
+  fi
+  currentnumprocs=$currentnumprocs-$PPN
+  finallist[${#finallist[@]}]="$line $numpernode,"
+  if [ $currentnumprocs -lt 0 ]; then
+    break
+  fi
+done < <(cat $PBS_NODEFILE | uniq)
+
+# Remove the comma from the final line (final node specification).
+finallist[$((${#finallist[@]}-1))]=${finallist[$((${#finallist[@]}-1))]%?}
+
+# Write the node list to the parameter file
+for line in "${finallist[@]}"
+do
+   echo $line >> $paramfile
+done
+
+# Write the name of the user application to the parameter file
+echo "$application" >> $paramfile
+
+# Call the mpirun command using the parameter file we have constructed.
+mpirun -f $paramfile
+
+exit_message()
+{
+    echo `basename $0` error: "$@"
+    exit 1
+}
+
+
