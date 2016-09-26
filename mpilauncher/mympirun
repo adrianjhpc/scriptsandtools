@@ -76,7 +76,7 @@ Other options:
 
 }
 
-
+args=""
 user_cmd_opt=no
 NPROCS=0
 PPN=0
@@ -118,6 +118,8 @@ while [ $# -ne 0 ] ; do
             if [ $user_cmd_opt = no ] ; then
                 user_cmd_opt=yes
                 application=\"$1\"
+            else 
+                args="$args $1"
             fi
             shift 1
             ;;
@@ -203,7 +205,7 @@ while read line; do
   if [ $(($currentnumprocs-$PPN)) -lt 0 ]; then
      numpernode=$(($numpernode+($currentnumprocs-$PPN)))
   fi
-  currentnumprocs=$currentnumprocs-$PPN
+  currentnumprocs=$(($currentnumprocs-$PPN))
   finallist[${#finallist[@]}]="$line $numpernode,"
   if [ $currentnumprocs -lt 0 ]; then
     break
@@ -220,7 +222,7 @@ do
 done
 
 # Write the name of the user application to the parameter file
-echo "$application" >> $paramfile
+echo "$application $args" >> $paramfile
 
 # Call the mpirun command using the parameter file we have constructed.
 mpirun -f $paramfile
