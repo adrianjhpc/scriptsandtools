@@ -262,11 +262,11 @@ def main(argv):
        infile.close()
 
     plot_data(mpi_max_stripedate, mpi_max_stripemin, mpi_max_stripemax, mpi_max_stripeav, mpi_max_stripecount, 'mpiio_max_stripe')
-    plot_data(mpi_max_stripedate, mpi_max_stripemin, mpi_max_stripemax, mpi_max_stripeav, mpi_max_stripecount, 'mpiio_4_stripe')
+    plot_data(mpi_4_stripedate, mpi_4_stripemin, mpi_4_stripemax, mpi_4_stripeav, mpi_4_stripecount, 'mpiio_4_stripe')
     plot_data(hdf5_max_stripedate, hdf5_max_stripemin, hdf5_max_stripemax, hdf5_max_stripeav, hdf5_max_stripecount, 'hdf5_max_stripe')
-    plot_data(hdf5_max_stripedate, hdf5_max_stripemin, hdf5_max_stripemax, hdf5_max_stripeav, hdf5_max_stripecount, 'hdf5_max_stripe')
+    plot_data(hdf5_4_stripedate, hdf5_4_stripemin, hdf5_4_stripemax, hdf5_4_stripeav, hdf5_4_stripecount, 'hdf5_4_stripe')
     plot_data(netcdf_max_stripedate, netcdf_max_stripemin, netcdf_max_stripemax, netcdf_max_stripeav, netcdf_max_stripecount, 'netcdf_max_stripe')
-    plot_data(netcdf_max_stripedate, netcdf_max_stripemin, netcdf_max_stripemax, netcdf_max_stripeav, netcdf_max_stripecount, 'netcdf_max_stripe')
+    plot_data(netcdf_4_stripedate, netcdf_4_stripemin, netcdf_4_stripemax, netcdf_4_stripeav, netcdf_4_stripecount, 'netcdf_4_stripe')
 
     sys.exit(0)
 
