@@ -13,16 +13,14 @@ import datetime as dt
 import calendar
 
 # Modules for analysing and visualising data
-import pandas as pd
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-from matplotlib.finance import date2num
+from matplotlib.dates import date2num
 matplotlib.rcParams.update({'font.size': 9})
 matplotlib.rcParams.update({'figure.autolayout': True})
 from matplotlib import dates
-import seaborn as sns
 
 def main(argv):
 
