@@ -70,8 +70,8 @@ case $MY_PROCID in
         ;;
 
     *) 
-	echo "We had a problem, please contact the helpdesk (helpdesk@login.archer.ac.uk)"
-        echo "or adrianj@epcc.ed.ac.uk if you need help sorting this problem out.  It is likely"
+	echo "We had a problem, please contact the helpdesk (helpdesk@archer.ac.uk)"
+        echo "or a.jackson@epcc.ed.ac.uk if you need help sorting this problem out.  It is likely"
 	echo "that the problem is due to the number of values of the number of cores per process"
 	echo "or nthreads variables, or that the aprun command has been altered in a way that"
 	echo "does not work with this script and the associated programs."
