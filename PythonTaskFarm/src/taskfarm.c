@@ -12,7 +12,7 @@
  * *----------------------------------------------------------------------
  * * Copyright 2014 EPCC, The University of Edinburgh
  * *
- * * cpuid is free software: you can redistribute it and/or modify
+ * * ptf is free software: you can redistribute it and/or modify
  * * it under the terms of the GNU General Public License as published by
  * * the Free Software Foundation, either version 3 of the License, or
  * * (at your option) any later version.
@@ -23,7 +23,7 @@
  * * GNU General Public License for more details.
  * *
  * * You should have received a copy of the GNU General Public License
- * * along with cpuid.  If not, see <http://www.gnu.org/licenses/>.
+ * * along with ptf.  If not, see <http://www.gnu.org/licenses/>.
  * *----------------------------------------------------------------------
  * */
 
@@ -33,8 +33,13 @@
 #include<mpi.h>
 #include<string.h>
 #include<errno.h>
+#ifdef PYTHON2
 #include<python2.7/Python.h>
 #include<python2.7/pythonrun.h>
+#else
+#include<python3.5m/Python.h>
+#include<python3.5m/pythonrun.h>
+#endif
 
 #define TRUE 1
 #define FALSE 0
