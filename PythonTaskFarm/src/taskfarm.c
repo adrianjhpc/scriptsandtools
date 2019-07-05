@@ -3,7 +3,10 @@
 #include<mpi.h>
 #include<string.h>
 #include<errno.h>
-#ifdef PYTHON3
+#ifdef PYTHON36
+#include<python3.6m/Python.h>
+#include<python3.6m/pythonrun.h>
+#elif PYTHON35
 #include<python3.5m/Python.h>
 #include<python3.5m/pythonrun.h>
 #else
@@ -55,7 +58,7 @@ int main(int argc, char *argv[]){
   // Setup python
   // Pickup the python executable from the command line. 
   // This is necessary to ensure that this will work with virtualenv and things like it.
-#ifdef PYTHON3
+#if defined PYTHON35 || defined PYTHON36
   wchar_t *programname = Py_DecodeLocale("python", NULL);
   Py_SetProgramName(programname);
 #else
@@ -63,7 +66,7 @@ int main(int argc, char *argv[]){
 #endif
   Py_Initialize();
  
-#ifdef PYTHON3
+#if defined PYTHON35 || defined PYTHON36
   wchar_t** python3argv = PyMem_Malloc(sizeof(wchar_t*)*argc);
   for (int i=0; i<argc; i++) {
   wchar_t* arg = Py_DecodeLocale(newargv[i], NULL);
@@ -109,8 +112,8 @@ int main(int argc, char *argv[]){
 
   MPI_Finalize();
 
-#ifdef PYTHON3
-  free(python3argv);
+#if defined PYTHON35 || defined PYTHON36
+  PyMem_Free(python3argv);
 #endif
   free(programstring);
 
