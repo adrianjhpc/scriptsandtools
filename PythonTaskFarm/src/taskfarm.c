@@ -1,44 +1,14 @@
-/*===============================================================
- * * taskfarm - This C program is designed to run a python program
- * * as a taskfarm on a parallel computer.  It's target is a 
- * * serial python program.
- * *
- * *===============================================================
- * *
- * *===============================================================
- * * v1.0 - Initial version, Adrian Jackson
- * *===============================================================
- * *
- * *----------------------------------------------------------------------
- * * Copyright 2014 EPCC, The University of Edinburgh
- * *
- * * ptf is free software: you can redistribute it and/or modify
- * * it under the terms of the GNU General Public License as published by
- * * the Free Software Foundation, either version 3 of the License, or
- * * (at your option) any later version.
- * *
- * * cpuid is distributed in the hope that it will be useful,
- * * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * * GNU General Public License for more details.
- * *
- * * You should have received a copy of the GNU General Public License
- * * along with ptf.  If not, see <http://www.gnu.org/licenses/>.
- * *----------------------------------------------------------------------
- * */
-
-
 #include<stdio.h>
 #include<stdlib.h>
 #include<mpi.h>
 #include<string.h>
 #include<errno.h>
-#ifdef PYTHON2
-#include<python2.7/Python.h>
-#include<python2.7/pythonrun.h>
-#else
+#ifdef PYTHON3
 #include<python3.5m/Python.h>
 #include<python3.5m/pythonrun.h>
+#else
+#include<python2.7/Python.h>
+#include<python2.7/pythonrun.h>
 #endif
 
 #define TRUE 1
@@ -85,12 +55,25 @@ int main(int argc, char *argv[]){
   // Setup python
   // Pickup the python executable from the command line. 
   // This is necessary to ensure that this will work with virtualenv and things like it.
+#ifdef PYTHON3
+  wchar_t *programname = Py_DecodeLocale("python", NULL);
+  Py_SetProgramName(programname);
+#else
   Py_SetProgramName("python");
-//  This was the old practice before virtualenv was an issue.  Delete if things work.
-//  Py_SetProgramName(newargv[0]);
+#endif
   Py_Initialize();
-  // Set the command line arguments for python.
+ 
+#ifdef PYTHON3
+  wchar_t** python3argv = PyMem_Malloc(sizeof(wchar_t*)*argc);
+  for (int i=0; i<argc; i++) {
+  wchar_t* arg = Py_DecodeLocale(newargv[i], NULL);
+    python3argv[i] = arg;
+  }
+  PySys_SetArgv(argc, python3argv);
+#else
+ // Set the command line arguments for python.
   PySys_SetArgv(argc, newargv);
+#endif
 
   // Read in the python program on the master process
   if(rank == MASTER){
@@ -126,6 +109,9 @@ int main(int argc, char *argv[]){
 
   MPI_Finalize();
 
+#ifdef PYTHON3
+  free(python3argv);
+#endif
   free(programstring);
 
   deallocate_char_array(&newargv, argc);
@@ -192,6 +178,8 @@ int parse_arguments(int argc, char *argv[], char **filename, char ***newargv, in
     }
   }
   // Convert the MPI rank into a string (character array) and add it as the last argument passed to python
+  // MPI ranks are rebased to 1->size rather than 0->size-1. If you don't want that remove the +1 from the 
+  // rank below
   itoa(rank+1, rank_string, MAXLENGTHRANK);
   (*newargv)[argc-1] = malloc(sizeof(char)*(strlen(rank_string)+1));
   for(i=0; i<strlen(rank_string)+1; i++){
