@@ -1,30 +1,3 @@
-
-Skip to content
-This repository
-
-    Pull requests
-    Issues
-    Gist
-
-    @adrianjhpc
-
-29
-297
-
-    46
-
-RRZE-HPC/likwid
-Code
-Issues 18
-Pull requests 0
-Projects 0
-Wiki
-Pulse
-Graphs
-likwid/COPYING
-253a35d on 20 May 2014
-jan.treibig Init repo with last HG state
-623 lines (513 sloc) 31.7 KB
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
@@ -647,8 +620,6 @@ copy of the Program in return for a fee.
 
                      END OF TERMS AND CONDITIONS
 
-    Contact GitHub API Training Shop Blog About 
 
-    © 2016 GitHub, Inc. Terms Privacy Security Status Help 
 
 

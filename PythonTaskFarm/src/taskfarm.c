@@ -9,6 +9,9 @@
 #elif PYTHON35
 #include<python3.5m/Python.h>
 #include<python3.5m/pythonrun.h>
+#elif PYTHON34
+#include<python3.4m/Python.h>
+#include<python3.4m/pythonrun.h>
 #else
 #include<python2.7/Python.h>
 #include<python2.7/pythonrun.h>
@@ -61,6 +64,10 @@ int main(int argc, char *argv[]){
 #if defined PYTHON35 || defined PYTHON36
   wchar_t *programname = Py_DecodeLocale("python", NULL);
   Py_SetProgramName(programname);
+#elif defined PYTHON34
+  PyObject *stringobj = PyUnicode_FromString("python");
+  wchar_t *programname = PyUnicode_AsWideCharString(stringobj, NULL);
+  Py_SetProgramName(programname);
 #else
   Py_SetProgramName("python");
 #endif
@@ -69,10 +76,19 @@ int main(int argc, char *argv[]){
 #if defined PYTHON35 || defined PYTHON36
   wchar_t** python3argv = PyMem_Malloc(sizeof(wchar_t*)*argc);
   for (int i=0; i<argc; i++) {
-  wchar_t* arg = Py_DecodeLocale(newargv[i], NULL);
+    wchar_t* arg = Py_DecodeLocale(newargv[i], NULL);
     python3argv[i] = arg;
   }
   PySys_SetArgv(argc, python3argv);
+#elif defined PYTHON34
+  wchar_t** python3argv = PyMem_Malloc(sizeof(wchar_t*)*argc);
+  for (int i=0; i<argc; i++) {
+    PyObject *stringobj = PyUnicode_FromString(newargv[i]);
+    wchar_t *arg = PyUnicode_AsWideCharString(stringobj, NULL);
+    python3argv[i] = arg;
+  }
+  PySys_SetArgv(argc, python3argv);
+
 #else
  // Set the command line arguments for python.
   PySys_SetArgv(argc, newargv);
@@ -112,7 +128,7 @@ int main(int argc, char *argv[]){
 
   MPI_Finalize();
 
-#if defined PYTHON35 || defined PYTHON36
+#if defined PYTHON34 || defined PYTHON35 || defined PYTHON36
   PyMem_Free(python3argv);
 #endif
   free(programstring);
