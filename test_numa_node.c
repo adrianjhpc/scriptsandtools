@@ -1,3 +1,26 @@
+//  Written by Adrian Jackson
+//  EPCC, The University of Edinburgh
+//  March 2020
+/*
+*----------------------------------------------------------------------
+* Copyright 2020 EPCC, The University of Edinburgh
+*
+* test_numa_node is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* test_numa_node.c is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with test_numa_node.c.  If not, see <http://www.gnu.org/licenses/>.
+*----------------------------------------------------------------------
+*/
+
+
 #include <numaif.h>
 #include <numa.h>
 #include <utmpx.h>
