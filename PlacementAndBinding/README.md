@@ -7,5 +7,5 @@ xthi-mpi-only implements MPI functionality, enabling process placement to be inv
 
 xthi-openmp-only implements OpenMP functionality, enabling thread binding to be investigated.
 
-To build the executables simply type `make`. You may need to modify the `Makefile` to change the compilers (`CC` and `MPICC`) to reference appropriate compilers for you system.
+To build the executables simply type `make`. You may need to modify the `Makefile` to change the compilers (`CC` and `MPICC`) to reference appropriate compilers for your system.
 
