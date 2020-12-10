@@ -30,17 +30,24 @@ time = []
 bandwidth = []
 
 for x in range(0, num_iter):
-	exec_string = 'dd if=/dev/zero of=' + file_location + ' bs=' + str(file_size) + 'KB count=1 oflag=dsync'
-	res = subprocess.Popen(exec_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-	out, err = res.communicate()
-	err = err.decode()
-	lines = err.splitlines()
-	if 'failed' in err:
-		print(err)
-		sys.exit(1)
-	split = lines[2].split(' ')
-	time.append(split[5])
-	bandwidth.append(split[7]+split[8])
+    exec_string = 'dd if=/dev/zero of=' + file_location + ' bs=' + str(file_size) + 'KB count=1 oflag=dsync'
+    res = subprocess.Popen(exec_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    out, err = res.communicate()
+    err = err.decode()
+    lines = err.splitlines()
+    if 'failed' in err:
+        print(err)
+        sys.exit(1)
+    split = lines[2].split(" ")
+    if(len(split) == 11):
+        time.append(split[7])
+        bandwidth.append(split[9]+split[10])
+    elif(len(split) == 9):
+        time.append(split[5])
+        bandwidth.append(split[7]+split[8])
+    else:
+        print('dd output not as expected, exiting')
+        sys.exit(1)
 
 
 os.remove(file_location)
@@ -95,4 +102,4 @@ ax2.grid(None)
 
 fig.tight_layout()
 
-plt.savefig('dd-results-'+file_location+'-bs-'+str(file_size))
+plt.savefig('dd-results-'+file_location.replace('/','-')+'-bs-'+str(file_size))
