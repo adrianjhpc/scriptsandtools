@@ -101,7 +101,7 @@ color='thistle'
 
 ax2 = ax1.twinx()  
 ax2.set_ylabel('Bandwidth (MB/s)', color=color)  # we already handled the x-label with ax1
-ax2.plot(y_pos, final_bandwidth, color=color, linestyle='None', marker='+', markersize=1, markeredgewidth=1)
+ax2.plot(y_pos, final_bandwidth, color=color, linestyle='None', marker='+', markersize=0.5, markeredgewidth=3)
 ax2.set_axisbelow(True)
 ax2.grid(None)
 
