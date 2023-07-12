@@ -1,10 +1,12 @@
 
+from textwrap import wrap
 import sys
 import os
 import subprocess
 import matplotlib.pyplot as plt
 import numpy as np
 import re
+import datetime 
 
 num_args = len(sys.argv)
 
@@ -28,6 +30,8 @@ if(file_size < 1):
 
 time = []
 bandwidth = []
+
+date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") 
 
 for x in range(0, num_iter):
     exec_string = 'dd if=/dev/zero of=' + file_location + ' bs=' + str(file_size) + 'KB count=1 oflag=dsync'
@@ -79,8 +83,10 @@ for entry in bandwidth:
 plt.style.use('ggplot')
 fig, ax1 = plt.subplots()
 
-ax1.set_facecolor('lightblue')
-ax1.set_title("dd benchmarking - file: " + file_location + " block size: " + str(file_size))
+
+ax1.set_facecolor('aliceblue')
+title =  "\n".join(wrap("dd benchmarking - file: " + file_location + " block size: " + str(file_size) + " date: " + str(date),50))
+ax1.set_title(title)
 
 label = list(range(0, num_iter))
 
@@ -91,15 +97,15 @@ ax1.set_xlabel("Run")
 ax1.set_ylabel("Runtime (seconds)", color=color)
 ax1.set_axisbelow(True)
 
-color='black'
+color='thistle'
 
 ax2 = ax1.twinx()  
 ax2.set_ylabel('Bandwidth (MB/s)', color=color)  # we already handled the x-label with ax1
-ax2.plot(y_pos, final_bandwidth, color=color)
+ax2.plot(y_pos, final_bandwidth, color=color, linestyle='None', marker='+', markersize=0.5, markeredgewidth=3)
 ax2.set_axisbelow(True)
 ax2.grid(None)
 
 
 fig.tight_layout()
 
-plt.savefig('dd-results-'+file_location.replace('/','-')+'-bs-'+str(file_size))
+plt.savefig('dd-'+str(date)+'-'+file_location.replace('/','-')+'-bs-'+str(file_size),dpi=300)
